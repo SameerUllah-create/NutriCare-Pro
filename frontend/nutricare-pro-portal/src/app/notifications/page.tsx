@@ -1,0 +1,15 @@
+"use client";
+import {useState} from "react";
+import type {FormEvent} from "react";
+import {PortalShell} from "@/components/PortalShell";
+import {useLocale} from "@/components/LocaleProvider";
+import {Field,Notice,Empty} from "@/components/Forms";
+import {api,json,errorMessage} from "@/lib/api";
+import {useResource} from "@/lib/useResource";
+type Notification={id:number;title:string;message:string;isRead:boolean;createdAt:string};
+type Delivery={id:number;type:string;channel:string;status:string;deliveryStatus:string;attemptCount:number;sentAt?:string;nextAttemptAt?:string};
+export default function Page(){return <PortalShell><Notifications/></PortalShell>;}
+function Notifications(){const list=useResource<Notification[]>("/api/Notifications"),preferences=useResource<{email:boolean;sms:boolean;inApp:boolean}>("/api/Notifications/preferences"),delivery=useResource<Delivery[]>("/api/Notifications/delivery-status"),{t,date}=useLocale();const [error,setError]=useState(""),[message,setMessage]=useState(""),[busy,setBusy]=useState(false);
+async function mark(id?:number){try{await api(`/api/Notifications/${id?`${id}/read`:"read-all"}`,json("PUT"));await list.reload();}catch(e){setError(errorMessage(e));}}
+async function save(event:FormEvent<HTMLFormElement>){event.preventDefault();const values=new FormData(event.currentTarget);setBusy(true);setError("");try{await api("/api/Notifications/preferences",json("PUT",{email:values.get("email")==="on",sms:values.get("sms")==="on",inApp:values.get("inApp")==="on"}));await preferences.reload();setMessage("Preferences updated.");}catch(e){setError(errorMessage(e));}finally{setBusy(false);}}
+return <main id="main-content" className="content-page"><h1>{t("Notifications")}</h1><Notice error={error||list.error||preferences.error||delivery.error} message={message} loading={list.loading}/><button className="button secondary" onClick={()=>void mark()}>{t("Mark all as read")}</button>{list.data?.length===0&&<Empty/>}<ul className="record-list">{list.data?.map(item=><li key={item.id}><h2>{item.title}</h2><p>{item.message}</p><p className="meta">{date(item.createdAt)}</p>{!item.isRead&&<button className="button secondary" onClick={()=>void mark(item.id)}>{t("Mark as read")}</button>}</li>)}</ul>{preferences.data&&<form className="panel form" onSubmit={save}><h2>{t("Notification preferences")}</h2>{(["email","sms","inApp"]as const).map(channel=><Field key={channel} label={{email:"Email",sms:"SMS",inApp:"In-app"}[channel]}><input name={channel} type="checkbox" defaultChecked={preferences.data?.[channel]}/></Field>)}<button className="button" disabled={busy}>{t("Save changes")}</button></form>}<section className="panel"><h2>{t("Delivery status")}</h2><div className="table-scroll"><table className="data-table"><thead><tr><th>{t("Type")}</th><th>{t("Channel")}</th><th>{t("Status")}</th><th>{t("Attempts")}</th><th>{t("Date")}</th></tr></thead><tbody>{delivery.data?.map(item=><tr key={item.id}><td>{item.type}</td><td>{item.channel}</td><td>{item.deliveryStatus||item.status}</td><td>{item.attemptCount}</td><td>{item.sentAt?date(item.sentAt):"—"}</td></tr>)}</tbody></table></div></section></main>;}

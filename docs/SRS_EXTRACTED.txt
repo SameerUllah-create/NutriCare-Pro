@@ -1,0 +1,157 @@
+﻿SOFTWARE REQUIREMENTS SPECIFICATION
+Nutrition Consultation & Patient Management Web Application
+Version 1.0  |  14 October 2026  |  Draft for stakeholder approval
+Working product name: NutriCare Pro. This specification consolidates the previously planned 18 development modules; actual implementation must be verified against the repository.
+1. Purpose, scope and objectives
+Deliver a responsive, secure web application for a qualified nutrition professional to attract prospective patients, schedule consultations, deliver personalized nutrition plans, and maintain patient engagement. The system provides public marketing pages, a patient portal, a nutritionist workspace and an administrator console.
+Primary outcomes: accessible booking, reduced administrative workload, safe handling of health records, and measurable follow-up engagement.
+In scope: authentication, appointments, intake, medical documents, diet plans, progress, payments, messaging, video-session links, content, notifications, analytics and audit trails.
+Out of scope unless separately approved: medical diagnosis, emergency triage, automated clinical decision-making, insurance claims and multi-clinic marketplace support.
+2. Stakeholders and roles
+[TABLE]
+Role | Responsibilities / access
+Visitor | Browse services, biography, articles, pricing, FAQs and start booking.
+Patient | Manage own profile, appointments, payments, records, plans and communication.
+Nutritionist | Manage assigned patients, schedule, consultations, diet plans and progress.
+Administrator | Manage users, content, configurations, reporting and support; clinical data access limited by policy.
+[/TABLE]
+3. Functional requirements
+FR-01 Public website & discovery
+Responsive home, about, credentials, services, fees, FAQs, contact and blog pages.
+Prominent Book Appointment CTAs, service-specific landing pages, SEO metadata and sitemap.
+Publish only verified qualifications, authentic testimonials and approved clinical claims.
+FR-02 Identity & profiles
+Patient registration, email verification, sign-in/out, password reset and profile update.
+Role-based authorization for Patient, Nutritionist and Admin; server-side ownership checks.
+Session expiry, token revocation, login rate limits and optional MFA for privileged accounts.
+FR-03 Booking & availability
+Nutritionist configures working hours, breaks, holidays, service durations and consultation modes.
+Patients select service, available slot, time zone, complete intake and receive confirmation.
+Prevent overlapping bookings atomically; reschedule/cancel using configurable cutoffs.
+Support appointment lifecycle: Pending, Confirmed, Cancelled, Completed, No-show.
+FR-04 Patient intake and clinical records
+Collect relevant goals, history, allergies, medications and lifestyle with explicit consent.
+Patient can upload permitted reports; clinician can review and add dated consultation notes.
+Access controls, retention and deletion rules apply to sensitive health information.
+FR-05 Diet plans
+Nutritionist creates, versions, edits, assigns and archives individualized plans.
+Plans contain meal schedules, portions, nutrition estimates, instructions and review dates.
+Patient views current and previous plans and downloads accessible PDFs.
+FR-06 Progress monitoring
+Record weight, measurements, adherence and clinician-selected metrics over time.
+Display dated charts and trends; label estimated calculations and avoid diagnostic claims.
+Nutritionist reviews progress and adjusts plans with change history.
+FR-07 Payments & invoicing
+Show consultation/package prices and checkout before payment.
+Record payment intent, pending/success/failure/refund and generate receipts.
+Verify provider-signed callbacks; use idempotency keys and never store card credentials.
+FR-08 Messaging & consultation
+Authorized patient–nutritionist conversations with persistent message history.
+Unread counts, real-time delivery, reconnection and attachment restrictions.
+Create protected video-session links and enforce appointment access policies.
+FR-09 Notifications
+Email/SMS/in-app confirmations, reminders, reschedules and new-plan alerts.
+Notification preferences, delivery status, retry policy and message templates.
+Avoid exposing sensitive medical details in external notifications.
+FR-10 Content and administration
+Admin manages services, pricing, availability settings, FAQs, blogs and moderation.
+Dashboards for bookings, payments and operational metrics with least-privilege data access.
+Audit important account, appointment, plan, document and payment actions.
+FR-11 Support and feedback
+Contact form with spam prevention and acknowledgement.
+Patient feedback and testimonials require consent and moderation.
+Publish clear emergency disclaimer: service is not for urgent or emergency care.
+4. Key workflows and acceptance criteria
+[TABLE]
+Workflow | Acceptance criteria
+New patient booking | User selects an actually free slot; booking appears in both dashboards; confirmation issued once; concurrent attempts cannot double-book.
+Diet plan assignment | Only authorized clinician can assign; patient sees the latest published version; revisions remain traceable.
+Report upload | Invalid type/oversized file rejected; valid file stored privately; only authorized patient and clinician can access.
+Payment confirmation | A booking is marked paid only after verified provider confirmation; duplicate webhooks do not duplicate transactions.
+Cross-account access | Patient A cannot read Patient B's appointments, messages, plans or documents by altering IDs.
+Cancellation | Cancellation policy is displayed and applied; slot release, refunds and notifications follow configured rules.
+[/TABLE]
+5. Non-functional requirements
+[TABLE]
+ID | Requirement / target
+NFR-01 Security | TLS everywhere; encryption at rest for sensitive data; secrets in managed secret store; OWASP-oriented controls.
+NFR-02 Privacy | Explicit privacy notice, consent records, data minimization, export/deletion workflows and documented retention policy.
+NFR-03 Availability | Proposed production target 99.5% monthly uptime; monitored health checks and incident response.
+NFR-04 Performance | Proposed p95 API response under 500 ms for routine reads at agreed load; public Core Web Vitals monitored.
+NFR-05 Accessibility | Target WCAG 2.2 AA for core journeys, keyboard support, contrast and screen-reader labels.
+NFR-06 Compatibility | Current Chrome, Edge, Firefox and Safari; responsive from 320 px upward.
+NFR-07 Reliability | Automated backups, tested restore, retry-safe notifications and payment webhook idempotency.
+NFR-08 Maintainability | Modular architecture, migrations, documented APIs, CI checks and structured logs without clinical secrets.
+NFR-09 Localization | Pakistan Standard Time default; store instants in UTC; prepare for English/Urdu content.
+NFR-10 Observability | Traceable request IDs, audit logs, error monitoring and alerting; redact personal/medical data.
+[/TABLE]
+6. Proposed technical architecture
+[TABLE]
+Layer | Planned technologies
+Frontend | Next.js 15, React, TypeScript, Tailwind CSS, shadcn/ui
+Backend | ASP.NET Core 9 Web API, C#, EF Core, FluentValidation, MediatR/CQRS where justified
+Database | SQL Server / Azure SQL
+Authentication | ASP.NET Core Identity, JWT access and refresh tokens, role/ownership authorization
+Real-time | ASP.NET Core SignalR
+Files | Azure Blob Storage with private containers and short-lived access
+Integrations | Payment provider (JazzCash/EasyPaisa/Stripe subject to merchant eligibility), email/SMS, Zoom/Meet as supported
+Operations | Azure App Service, Vercel or equivalent, CI/CD, Serilog, health checks, Docker
+Testing | xUnit, Playwright, Postman, Lighthouse
+[/TABLE]
+Technology entries are proposed/planned based on prior prompts, not independently verified installed dependencies. Confirm actual versions and integrations from the repository and deployment settings.
+7. Core data model
+Identity: User, Role, PatientProfile, NutritionistProfile, ConsentRecord, RefreshToken.
+Scheduling: Service, AvailabilityRule, AvailabilityException, Appointment, ConsultationNote.
+Care: IntakeForm, MedicalReport, DietPlan, DietPlanVersion, MealItem, ProgressEntry.
+Commerce: Price, Payment, Refund, Invoice, ProviderWebhookEvent.
+Engagement: Conversation, Message, Notification, BlogPost, Testimonial.
+Governance: AuditLog, AccessLog, RetentionPolicy, SystemSetting.
+Every patient-linked record must enforce ownership/assignment; use immutable IDs, timestamps, concurrency protection and appropriate indexes. Document entity relationships and migration history separately.
+8. UI/UX requirements
+Visual direction: premium, calm, science-led wellness; white backgrounds, emerald/teal accents, accessible contrast and consistent spacing.
+Landing page: credible hero, verified qualifications, concise services, consultation formats, authentic reviews, FAQs and visible booking CTA.
+Booking wizard: service → date/time → intake → payment if applicable → confirmation; show progress and recovery from errors.
+Patient dashboard: next appointment, current diet plan, progress chart, secure reports and messages.
+Nutritionist dashboard: today’s schedule, patient queue, plan editor, clinical notes and follow-ups.
+Admin dashboard: operational metrics, user/content management, audit access and configuration.
+Mobile-first layout; clear form validation, loading/empty states, keyboard access and no manipulative medical marketing.
+9. Security, ethics and compliance
+Verify applicable Pakistan health-data, professional licensing, consumer-protection and electronic-payment requirements with qualified local counsel before launch.
+Use explicit consent for sensitive information, teleconsultation, testimonials and marketing communications.
+Never promise cures or guaranteed weight loss; clearly distinguish nutrition counseling from emergency medical services.
+Do not allow AI-generated advice to be issued as a clinical plan without professional review.
+Define who may access clinical notes, how long records are retained, and how patients exercise data rights.
+Conduct authorization, upload, injection, XSS, CSRF (where relevant), webhook and audit-integrity testing.
+10. Testing and release gates
+Automated unit and integration tests for domain rules, validation, permissions and booking concurrency.
+Playwright E2E journeys for visitor, patient, nutritionist and administrator on desktop/mobile.
+API contract tests for authentication, appointments, plans, files, payments and notifications.
+Staging smoke tests of email/SMS, payment sandbox, video links, backups and restore.
+Accessibility and performance audits; penetration testing or independent security review before handling real medical records.
+Release only after all critical/high defects are resolved, privacy policies approved and clinician signs off on workflows.
+11. Deployment and operations
+Separate local, staging and production environments with independent secrets and databases.
+CI pipeline: restore, build, lint, unit tests, integration tests, migration checks, deploy to staging, smoke test, approved production promotion.
+Daily backups and documented recovery objectives; configure uptime, error-rate and payment-failure alerts.
+Operational runbooks for account lockout, missed reminders, failed payment callbacks, data incidents and disaster recovery.
+12. Delivery priorities
+[TABLE]
+Release | Scope
+MVP | Public site, profiles, clinician availability, appointments, intake, basic diet plans, notifications, privacy controls.
+Release 1 | Payments, medical uploads, progress tracking, dashboards, blog and analytics.
+Release 2 | Chat, video integrations, advanced reporting, localized content and optional AI-assisted drafting with clinician review.
+[/TABLE]
+13. Assumptions, dependencies and open decisions
+Confirm the nutritionist’s exact credentials, registration/licensing status, scope of practice and approved public title.
+Confirm consultation modes, fees, packages, cancellation/refund rules, clinic location and appointment hours.
+Confirm which payment, SMS, email and video providers are actually contracted and operational in Pakistan.
+Confirm record-retention periods, consent text, privacy policy owner and administrator access to health data.
+Confirm single-nutritionist versus multi-provider future scope and whether Urdu is required at launch.
+Validate every requirement against the existing application; mark Implemented / Partial / Missing / Not applicable with evidence.
+14. Sign-off
+[TABLE]
+Stakeholder | Name / signature | Date
+Nutrition professional | ________________________ | __________
+Product owner | ________________________ | __________
+Technical lead | ________________________ | __________
+[/TABLE]
